@@ -1,4 +1,4 @@
-const express = require('express')
+import express from "express";
 const app = express()
 const port = 3000
 
@@ -12,7 +12,7 @@ app.get('/a.html', function (req, res) {
 })
 
 // body 안의 구문이 하나라면 중괄호{} 생략가능
-app.get('/b.html', (req, res) => res.send('Bye'))
+app.get('/b.html', (req, res) => res.send('ByeBye'))
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
