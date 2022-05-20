@@ -1,19 +1,53 @@
 import express from "express";
-const app = express()
-const port = 3000
+import { application } from "express";
+import mysql from "mysql2/promise";
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
+const pool = mysql.createPool({
+  host: "localhost",
+  user: "sbsst",
+  password: "sbs123414",
+  database: "a9",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
-// 익명함수 사용
-app.get('/a.html', function (req, res) {
-  res.send('Hi')
-})
+const app = express();
 
-// body 안의 구문이 하나라면 중괄호{} 생략가능
-app.get('/b.html', (req, res) => res.send('ByeBye'))
+app.use(express.json()); // Postman 사용가능
+
+const port = 3000;
+
+// 조회GET
+app.get("/todos", async (req, res) => {
+  const [rows] = await pool.query("SELECT * FROM todo ORDER BY id DESC");
+
+  res.json(rows);
+});
+
+// 단건조회GET
+app.get("/todos/:id", async (req, res) => {
+  // const id = req.params.id;
+  const {
+    id
+  } = req.params;
+
+  const [rows] = await pool.query(`
+  SELECT * 
+  FROM todo 
+  WHERE id = ?
+  `, [id]); // `쿼리문` 엔터 사용가능
+
+  if (rows.length == 0) {
+    res.status(404).json({
+      msg: "not found",
+    });
+    return;
+  }
+
+  res.json(rows[0]);
+});
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+  console.log(`Example app listening on port ${port}`);
+});
