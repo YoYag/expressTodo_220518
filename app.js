@@ -48,6 +48,65 @@ app.get("/todos/:id", async (req, res) => {
   res.json(rows[0]);
 });
 
+// 수정PATCH
+app.patch("/todos/:id", async (req, res) => {
+  const {
+    id
+  } = req.params;
+
+  const [rows] = await pool.query(`
+  SELECT * 
+  FROM todo 
+  WHERE id = ?
+  `, [id]);
+
+  if (rows.length == 0) {
+    res.status(404).json({
+      msg: "not found",
+    });
+    return;
+  }
+
+  const {
+    perform_date,
+    is_completed,
+    content
+  } = req.body;
+
+  if (!perform_date) {
+    res.status(400).json({
+      msg: "perform_date required",
+    });
+    return;
+  }
+
+  if (!is_completed) {
+    res.status(400).json({
+      msg: "is_completed required",
+    });
+    return;
+  }
+
+  if (!content) {
+    res.status(400).json({
+      msg: "content required",
+    });
+    return;
+  }
+
+  const [rs] = await pool.query(`
+  UPDATE todo
+  SET perform_date = ?,
+  is_completed = ?,
+  content = ?
+  WHERE id = ?
+  `, [perform_date, is_completed, content, id]);
+
+  res.json({
+    msg: `${id}번 할 일이 수정되었습니다.`,
+  });
+});
+
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
