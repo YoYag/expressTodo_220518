@@ -1,5 +1,7 @@
 import express from "express";
-import { application } from "express";
+import {
+  application
+} from "express";
 import mysql from "mysql2/promise";
 
 const pool = mysql.createPool({
@@ -18,6 +20,49 @@ app.use(express.json()); // Postman 사용가능
 
 const port = 3000;
 
+// 생성POST
+app.post("/todos", async (req, res) => {
+  const {
+    perform_date,
+    is_completed,
+    content
+  } = req.body;
+
+
+  if (!perform_date) {
+    res.status(400).json({
+      msg: "perform_date required",
+    });
+    return;
+  }
+
+  if (!is_completed) {
+    res.status(400).json({
+      msg: "is_completed required",
+    });
+    return;
+  }
+
+  if (!content) {
+    res.status(400).json({
+      msg: "content required",
+    });
+    return;
+  }
+
+  const [rows] = await pool.query(`
+    INSERT INTO todo
+    SET reg_date = NOW(),
+    perform_date = ?,
+    is_completed = ?,
+    content = ?;
+    `, [perform_date, is_completed, content]);
+
+  res.json({
+    msg: `할 일이 생성되었습니다.`,
+  });
+});
+
 // 조회GET
 app.get("/todos", async (req, res) => {
   const [rows] = await pool.query("SELECT * FROM todo ORDER BY id DESC");
@@ -33,10 +78,10 @@ app.get("/todos/:id", async (req, res) => {
   } = req.params;
 
   const [rows] = await pool.query(`
-  SELECT * 
-  FROM todo 
-  WHERE id = ?
-  `, [id]); // `쿼리문` 엔터 사용가능
+    SELECT * 
+    FROM todo 
+    WHERE id = ?
+    `, [id]); // `쿼리문` 엔터 사용가능
 
   if (rows.length == 0) {
     res.status(404).json({
@@ -55,10 +100,10 @@ app.patch("/todos/:id", async (req, res) => {
   } = req.params;
 
   const [rows] = await pool.query(`
-  SELECT * 
-  FROM todo 
-  WHERE id = ?
-  `, [id]);
+    SELECT * 
+    FROM todo 
+    WHERE id = ?
+    `, [id]);
 
   if (rows.length == 0) {
     res.status(404).json({
@@ -95,17 +140,19 @@ app.patch("/todos/:id", async (req, res) => {
   }
 
   const [rs] = await pool.query(`
-  UPDATE todo
-  SET perform_date = ?,
-  is_completed = ?,
-  content = ?
-  WHERE id = ?
-  `, [perform_date, is_completed, content, id]);
+    UPDATE todo
+    SET reg_date = NOW(),
+    perform_date = ?,
+    is_completed = ?,
+    content = ?
+    WHERE id = ?
+    `, [perform_date, is_completed, content, id]);
 
   res.json({
     msg: `${id}번 할 일이 수정되었습니다.`,
   });
 });
+
 
 // 삭제DELETE
 app.delete("/todos/:id", async (req, res) => {
@@ -114,9 +161,9 @@ app.delete("/todos/:id", async (req, res) => {
   } = req.params;
 
   const [rows] = await pool.query(`
-  DELETE FROM todo 
-  WHERE id = ?
-  `, [id]);
+    DELETE FROM todo 
+    WHERE id = ?
+    `, [id]);
 
   if (rows.length == 0) {
     res.status(404).json({
